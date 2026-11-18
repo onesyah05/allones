@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -48,8 +49,24 @@ func TestBrowserLifecycle(t *testing.T) {
 	if exe == "" {
 		t.Skip("Chromium not installed")
 	}
-	bp := NewBrowserPool(exe, true, 800, 600, filepath.Join(t.TempDir(), "profile"))
-	defer bp.Close()
+	// Own the profile dir rather than t.TempDir(): Chrome keeps flushing its
+	// profile as it exits, so an immediate RemoveAll races it and "directory not
+	// empty" would fail an otherwise-passing test. Close the pool first, then
+	// remove with a few retries, best-effort.
+	profile, err := os.MkdirTemp("", "allones-browser-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bp := NewBrowserPool(exe, true, 800, 600, filepath.Join(profile, "profile"))
+	t.Cleanup(func() {
+		bp.Close()
+		for i := 0; i < 20; i++ {
+			if os.RemoveAll(profile) == nil {
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	})
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/slow" {
 			<-r.Context().Done()
