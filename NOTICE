@@ -1,0 +1,43 @@
+AllOnes
+Copyright 2026 The AllOnes Authors
+
+This product includes third-party material:
+
+---
+
+Reverse Engineer Anything (REA) — the bundled skill
+  internal/skills/library/reverse-engineer-anything/
+
+  The "reverse-engineer-anything" skill (SKILL.md and its references/) is
+  vendored from the REA project by morluto:
+
+    https://github.com/morluto/rea
+
+  Licensed under the MIT License. The full license text is retained adjacent
+  to the skill at:
+
+    internal/skills/library/reverse-engineer-anything/LICENSE
+
+  MIT License, Copyright (c) 2026 morluto.
+
+  AllOnes does not vendor the REA runtime, engines, or MCP server. The `rea`
+  built-in tool runs the upstream `rea-agents` CLI (via npx) or an installed
+  `rea` binary when present; install REA separately from the official sources.
+
+---
+
+Go module dependencies (see go.mod for exact versions and licenses):
+
+  modernc.org/sqlite        — BSD-3-Clause (pure-Go SQLite)
+  github.com/chromedp/*     — MIT (Chrome DevTools Protocol client)
+  golang.org/x/crypto       — BSD-3-Clause (SSH client)
+  golang.org/x/net          — BSD-3-Clause (HTML tokenizer)
+  gopkg.in/yaml.v3          — MIT / Apache-2.0
+
+Vulnerability data is queried live from the OSV.dev API
+(https://osv.dev), operated by the Open Source Security Foundation.
+
+The security methodology references the OWASP Top 10 (2025), OWASP API
+Security Top 10 (2023), OWASP Top 10 for LLM Applications, OWASP Top 10 for
+Agentic Applications (2026), and the OWASP Web Security Testing Guide. OWASP
+materials are published by the OWASP Foundation under Creative Commons.
