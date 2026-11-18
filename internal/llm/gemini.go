@@ -17,7 +17,9 @@ type gemini struct {
 	idle      time.Duration
 }
 
-// cleanSchema removes JSON-Schema keywords Gemini rejects.
+// cleanSchema removes JSON-Schema keywords Gemini rejects and reconciles each
+// object's `required` list with its `properties` — Gemini returns HTTP 400 if a
+// required entry names a property that is not defined.
 func cleanSchema(v any) any {
 	switch t := v.(type) {
 	case map[string]any:
@@ -29,6 +31,7 @@ func cleanSchema(v any) any {
 			}
 			out[k] = cleanSchema(val)
 		}
+		pruneRequired(out)
 		return out
 	case []any:
 		out := make([]any, len(t))
@@ -38,6 +41,42 @@ func cleanSchema(v any) any {
 		return out
 	}
 	return v
+}
+
+// pruneRequired drops any `required` entry that is not a defined property, and
+// removes `required` entirely once nothing valid is left. Accepts the []string
+// that builtin tools use and the []any that MCP (JSON) schemas carry.
+func pruneRequired(out map[string]any) {
+	raw, ok := out["required"]
+	if !ok {
+		return
+	}
+	var names []string
+	switch r := raw.(type) {
+	case []string:
+		names = r
+	case []any:
+		for _, x := range r {
+			if s, ok := x.(string); ok {
+				names = append(names, s)
+			}
+		}
+	default:
+		delete(out, "required")
+		return
+	}
+	props, _ := out["properties"].(map[string]any)
+	kept := make([]any, 0, len(names))
+	for _, n := range names {
+		if _, exists := props[n]; exists {
+			kept = append(kept, n)
+		}
+	}
+	if len(kept) > 0 {
+		out["required"] = kept
+	} else {
+		delete(out, "required")
+	}
 }
 
 func (c *gemini) Stream(ctx context.Context, req Request, onDelta func(Delta)) (*Response, error) {

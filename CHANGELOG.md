@@ -8,6 +8,17 @@ release publishes the matching section below as its GitHub Release notes.
 
 ---
 
+## [1.1.2] — 2026-11-18
+
+### Fixed
+- **Gemini tool calls rejected with HTTP 400.** Google's `generateContent` refuses
+  a function declaration whose `parameters.required` names a property that is not
+  defined (*"property is not defined"*) — which an MCP server's schema could trip,
+  breaking every Gemini turn. The schema cleaner now prunes any `required` entry
+  that has no matching property (and drops `required` when none remain), for both
+  built-in and MCP tool schemas, at every nesting level. A test also asserts no
+  built-in tool declares a stray `required`.
+
 ## [1.1.1] — 2026-11-18
 
 ### Fixed
@@ -86,6 +97,7 @@ security-first from the inside out.
 - One pure-Go binary (no CGO, no runtime to install) for Linux, macOS and Windows
   on amd64 and arm64. Your machine, your models, no SaaS.
 
+[1.1.2]: https://github.com/onesyah05/allones/releases/tag/v1.1.2
 [1.1.1]: https://github.com/onesyah05/allones/releases/tag/v1.1.1
 [1.1.0]: https://github.com/onesyah05/allones/releases/tag/v1.1.0
 [1.0.0]: https://github.com/onesyah05/allones/releases/tag/v1.0.0
