@@ -145,7 +145,9 @@ func TestDevicePolling(t *testing.T) {
 			if b["client_id"] != defaults().providers["codex"].clientID {
 				t.Error("client identity")
 			}
-			w.Write([]byte(`{"device_auth_id":"device","user_code":"ABCD","interval":1}`))
+			// OpenAI returns interval as a string ("5"), not a number — the flow
+			// must tolerate it (regression: a float64 field failed the decode).
+			w.Write([]byte(`{"device_auth_id":"device","user_code":"ABCD","interval":"5"}`))
 		case "/poll":
 			n := polls.Add(1)
 			if n == 1 {

@@ -12,11 +12,31 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/allones/allones/internal/config"
 )
+
+// flexFloat decodes a JSON number or a quoted number. OpenAI's device-auth
+// endpoint returns `interval` as a string ("5"), which a plain float64 field
+// rejects — failing the whole login before the user ever sees a code.
+type flexFloat float64
+
+func (f *flexFloat) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(strings.TrimSpace(string(b)), `"`)
+	if s == "" || s == "null" {
+		*f = 0
+		return nil
+	}
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return err
+	}
+	*f = flexFloat(v)
+	return nil
+}
 
 type endpoint struct{ clientID, secret, authorize, token, redirect, scope string }
 type endpoints struct {

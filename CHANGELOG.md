@@ -8,6 +8,15 @@ release publishes the matching section below as its GitHub Release notes.
 
 ---
 
+## [1.1.1] — 2026-11-18
+
+### Fixed
+- **Codex (ChatGPT) subscription login.** OpenAI's device-authorization endpoint
+  returns `interval` as a string (`"5"`), which a strict `float64` field rejected
+  — the login failed instantly with an opaque *"Login failed"* before any code was
+  shown. The device start now accepts a string or numeric interval, and a failed
+  login reports the real reason instead of a generic message.
+
 ## [1.1.0] — 2026-11-18
 
 A maintenance release that makes every future release documented and the build
@@ -77,5 +86,6 @@ security-first from the inside out.
 - One pure-Go binary (no CGO, no runtime to install) for Linux, macOS and Windows
   on amd64 and arm64. Your machine, your models, no SaaS.
 
+[1.1.1]: https://github.com/onesyah05/allones/releases/tag/v1.1.1
 [1.1.0]: https://github.com/onesyah05/allones/releases/tag/v1.1.0
 [1.0.0]: https://github.com/onesyah05/allones/releases/tag/v1.0.0

@@ -194,9 +194,11 @@ func (m *Manager) run(ctx context.Context, id, kind string, e endpoint) {
 	f.status.UserCode = ""
 	if err != nil {
 		f.status.Phase = "error"
-		f.status.Message = "Login failed"
 		if ctx.Err() != nil {
 			f.status.Message = "Login timed out"
+		} else {
+			// Surface the real reason; these errors carry no tokens or secrets.
+			f.status.Message = "Login failed: " + err.Error()
 		}
 	} else {
 		f.status.Phase = "done"
@@ -205,9 +207,9 @@ func (m *Manager) run(ctx context.Context, id, kind string, e endpoint) {
 }
 func (m *Manager) device(ctx context.Context, id string, e endpoint) (Tokens, error) {
 	var start struct {
-		ID       string  `json:"device_auth_id"`
-		Code     string  `json:"user_code"`
-		Interval float64 `json:"interval"`
+		ID       string    `json:"device_auth_id"`
+		Code     string    `json:"user_code"`
+		Interval flexFloat `json:"interval"` // the endpoint sends this as a string
 	}
 	_, err := request(ctx, m.client, m.endpoints.deviceStart, nil, map[string]string{"client_id": e.clientID}, false, &start)
 	if err != nil {
@@ -216,15 +218,16 @@ func (m *Manager) device(ctx context.Context, id string, e endpoint) (Tokens, er
 	if start.ID == "" || start.Code == "" {
 		return Tokens{}, errors.New("invalid device authorization")
 	}
-	if start.Interval <= 0 {
-		start.Interval = 5
+	interval := float64(start.Interval)
+	if interval <= 0 {
+		interval = 5
 	}
-	if start.Interval > 900 {
-		start.Interval = 900
+	if interval > 900 {
+		interval = 900
 	}
 	m.emit(id, "awaiting_user", "Open the URL and enter the user code", m.endpoints.verification, start.Code)
 	for {
-		timer := time.NewTimer(time.Duration(start.Interval * float64(m.pollUnit)))
+		timer := time.NewTimer(time.Duration(interval * float64(m.pollUnit)))
 		select {
 		case <-ctx.Done():
 			timer.Stop()
